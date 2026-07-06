@@ -1,0 +1,225 @@
+# Objects, Arrays, and Control Flow
+
+## Beginner Theory Questions
+
+1. What is a property in a JavaScript object, and what are its two components?
+2. Explain the difference between dot notation (`obj.key`) and bracket notation (`obj["key"]`). When must you use bracket notation?
+3. What is an array in JavaScript? Is it a distinct primitive type or a special kind of object?
+4. How does a `for...in` loop differ from a `for...of` loop? Which is used for arrays and which for objects?
+5. What does the `break` statement do inside a loop? What about `continue`?
+6. Describe the difference between `if...else if...else` control flow and a `switch` statement. Are they functionally identical?
+
+## Intermediate Theory Questions
+
+1. What are object property descriptors? Mention `enumerable`, `writable`, and `configurable`.
+2. How does the JavaScript engine handle array indices internally? Are they actually numbers or strings?
+3. Explain how sparse arrays work. What happens if you do `let arr = [1]; arr[100] = 2;`? What does `arr.length` return?
+4. How do array methods like `map`, `filter`, and `reduce` differ from a standard `for` loop in terms of side effects and functional programming concepts?
+5. Why is iterating over an object's properties not guaranteed to be in the chronological order of insertion? How do modern ES6 engines attempt to standardize this?
+6. What is a `label` statement in JavaScript control flow, and in what scenario would you actually need to use it?
+
+## Advanced Theory Questions
+
+1. Deep dive into V8 engine optimization: Explain the difference between "Dictionary Mode" (hash tables) and "Hidden Classes" (Shapes). Why does dynamically adding or removing object properties hurt performance?
+2. How do typed arrays (e.g., `Int32Array`) differ fundamentally from standard JavaScript arrays in terms of memory allocation and performance?
+3. What happens in memory when an array exceeds its pre-allocated capacity? Explain the concept of array resizing/reallocation under the hood.
+4. If a `try...catch...finally` block has a `return` statement in the `try` block, and another `return` statement in the `finally` block, which one takes precedence and why? Trace the execution flow.
+5. Can you use `for...of` to iterate over a standard object? If not, what underlying ES6 mechanic does the object lack, and how can you manually implement it?
+
+## Predict the Output
+
+### Snippet 1
+```javascript
+const obj = {
+  "1": "a",
+  1: "b",
+  [1]: "c"
+};
+console.log(obj["1"]);
+console.log(Object.keys(obj).length);
+```
+
+### Snippet 2
+```javascript
+let arr = [10, 20, 30];
+arr.length = 0;
+console.log(arr[0]);
+
+let arr2 = [10, 20, 30];
+arr2.length = 5;
+console.log(arr2[4]);
+```
+
+### Snippet 3
+```javascript
+let i = 0;
+outer: while (i < 3) {
+  let j = 0;
+  while (j < 3) {
+    if (i === 1 && j === 1) {
+      break outer;
+    }
+    console.log(i, j);
+    j++;
+  }
+  i++;
+}
+```
+
+### Snippet 4
+```javascript
+const user = { name: "Alice" };
+Object.freeze(user);
+user.name = "Bob";
+user.age = 25;
+console.log(user);
+```
+
+### Snippet 5
+```javascript
+function testControl() {
+  try {
+    console.log("try");
+    return 1;
+  } catch (e) {
+    console.log("catch");
+    return 2;
+  } finally {
+    console.log("finally");
+    return 3;
+  }
+}
+console.log(testControl());
+```
+
+## Debugging Challenges
+
+### Challenge 1: The Length Illusion
+```javascript
+let queue = [];
+queue[0] = "Task 1";
+queue["2"] = "Task 3";
+queue["fast"] = "Task 4";
+
+console.log(queue.length); // Why does this print 3, not 4? Where is "fast"?
+```
+
+### Challenge 2: The Mutable Iteration Bug
+```javascript
+let numbers = [1, 2, 3, 4, 5];
+for (let i = 0; i < numbers.length; i++) {
+  if (numbers[i] === 3) {
+    numbers.splice(i, 1); // Remove the number 3
+  }
+  console.log(numbers[i]);
+}
+// Output is 1, 2, undefined, 5. Why did 4 get skipped? Fix the logic.
+```
+
+## Explain the Internal Behavior
+
+1. **Object Freezing:** When `Object.freeze()` is called on an object, what exactly does the JS engine do to the object's internal property descriptors? How does this affect memory mutation?
+2. **The `for...of` Protocol:** Trace the internal method calls that occur when the engine executes a `for...of` loop on an array. What symbol is accessed, and what methods (`next()`, `value`, `done`) are utilized?
+
+## Trick Questions and Edge Cases
+
+### Edge Case 1
+```javascript
+const obj1 = { a: 1 };
+const obj2 = { b: 2 };
+const mainObj = {};
+mainObj[obj1] = "First";
+mainObj[obj2] = "Second";
+
+console.log(mainObj[obj1]);
+```
+
+### Edge Case 2
+```javascript
+let arr = [1, 2, 3];
+delete arr[1];
+console.log(arr.length);
+console.log(arr[1]);
+```
+
+---
+
+## Detailed Answers and Explanations
+
+### Beginner Theory Questions
+1. **Property:** A key-value pair attached to an object. The key is always a string or a Symbol. The value can be any valid JS data type.
+2. **Dot vs Bracket notation:** Dot notation (`obj.key`) requires the key to be a valid JS identifier (no spaces, can't start with numbers, etc.) and evaluates literally. Bracket notation (`obj["key"]` or `obj[myVar]`) evaluates the expression inside the brackets to a string, allowing spaces, numbers, and dynamic variables.
+3. **Array Type:** Arrays are not distinct primitive types. Under the hood, `typeof []` returns `"object"`. They are exotic objects tailored with special behaviors, like automatic `.length` management and an optimized prototype chain (`Array.prototype`).
+4. **`for...in` vs `for...of`:** `for...in` iterates over the *enumerable property keys* of an object (including inherited ones). `for...of` iterates over the *values* of an iterable object (like Arrays, Strings, Maps). Never use `for...in` for arrays because it iterates over string keys and includes inherited array prototype properties.
+5. **`break` vs `continue`:** `break` immediately terminates the loop completely. Execution resumes at the first statement after the loop block. `continue` skips the rest of the *current* iteration and jumps straight to the next iteration's condition check.
+6. **`if/else` vs `switch`:** `if/else` evaluates boolean expressions for each condition. `switch` evaluates a single expression once, and uses strict equality (`===`) to match it against multiple `case` clauses. `switch` can be more readable for multiple exact matches, but they serve similar structural purposes.
+
+### Intermediate Theory Questions
+1. **Property Descriptors:** Every property has hidden attributes. 
+   - `enumerable`: If true, it shows up in `for...in` loops and `Object.keys()`.
+   - `writable`: If true, the value can be changed via assignment.
+   - `configurable`: If true, the property can be deleted, and its descriptor attributes can be modified.
+2. **Array Indices:** Internally, standard JS array indices are coerced to Strings. `arr[1]` is conceptually identical to `arr["1"]`. The engine recognizes string keys that represent 32-bit positive integers and handles them efficiently, but structurally, it's still an object property key.
+3. **Sparse Arrays:** If you assign `arr[100] = 2`, the engine does not physically allocate 100 memory slots. It creates an object-like mapping with a key of `"100"` and a value of `2`. The `length` property automatically updates to the highest integer index + 1 (returning 101). Indices 0-99 are "empty slots" (not even initialized to `undefined`, they just don't exist).
+4. **Functional Iteration:** Standard `for` loops are imperative; you dictate exactly *how* to iterate, often mutating external variables (side effects). `map`, `filter`, and `reduce` are declarative. They do not mutate the original array (pure functions) but return a entirely new array or value, adhering to functional programming principles.
+5. **Property Order:** Historically, property order was not guaranteed. In ES6, iteration order for objects is strictly defined: Integer keys (in ascending numeric order) first, then string keys (in insertion order), then Symbol keys (in insertion order).
+6. **`label` Statement:** It acts as an identifier for a loop. You use it in conjunction with `break` or `continue` to escape or skip from deeply nested loops. Without a label, `break` only terminates the immediate inner loop.
+
+### Advanced Theory Questions
+1. **Dictionary vs Hidden Classes:** JS engines like V8 try to optimize objects by creating internal C++ structs called "Hidden Classes" (or Shapes). If you create `{x: 1, y: 2}`, it creates a shape predicting memory offsets. If you suddenly do `delete obj.x` or add a new property, the object's structure changes. V8 drops the fast Hidden Class optimization and degrades the object to a slower "Dictionary Mode" (a hash table), significantly degrading read/write speeds.
+2. **Typed Arrays:** Standard arrays are dynamic, hash-table-like objects that can store mixed types. Typed Arrays (e.g., `Int32Array`) allocate a contiguous, fixed block of raw binary memory buffer (`ArrayBuffer`). They can only store a specific numeric type, making them lightning-fast and memory-efficient, mimicking arrays in lower-level languages like C.
+3. **Array Reallocation:** When an array runs out of its initial allocated contiguous memory space, the engine must pause, allocate a new, larger block of contiguous memory (often 1.5x or 2x the old size), copy all existing elements to the new block, and then garbage collect the old block. This is a computationally expensive operation.
+4. **`finally` Precedence:** The `finally` block ALWAYS executes, regardless of what happens in `try` or `catch`. If the `finally` block contains a `return` statement, it completely overrides any `return` statement that was pending execution from the `try` or `catch` blocks.
+5. **Object `for...of`:** Standard objects are not Iterable. They lack the `[Symbol.iterator]` property. To make an object work with `for...of`, you must add a method named `[Symbol.iterator]` that returns an iterator object (which must have a `next()` method returning `{ value: any, done: boolean }`).
+
+### Predict the Output Explanations
+**Snippet 1:**
+- Output: `"c"`, `1`.
+- **Reasoning:** In JS objects, all property keys are ultimately strings. `"1"`, `1`, and `[1]` (computed property evaluating to `1`) all resolve to the exact same string key `"1"`. The assignments simply overwrite each other. The object ends up with a single key `"1"` holding the value `"c"`.
+
+**Snippet 2:**
+- Output: `undefined`, `undefined`.
+- **Reasoning:** Truncating an array's `length` property physically deletes elements beyond that length. `arr.length = 0` clears the array, so `arr[0]` is undefined. Expanding `length` (arr2) creates empty slots, but does not allocate `undefined`. `arr2[4]` is an empty slot, which evaluates to `undefined` upon access.
+
+**Snippet 3:**
+- Output: `0 0`, `0 1`, `0 2`, `1 0`.
+- **Reasoning:** When `i=1` and `j=1`, the condition hits `break outer;`. This completely terminates the `while` loop labeled `outer`. Execution stops entirely.
+
+**Snippet 4:**
+- Output: `{ name: "Alice" }`.
+- **Reasoning:** `Object.freeze()` makes the object immutable (shallowly). In non-strict mode, assignment to a frozen object silently fails without throwing an error. The object remains unchanged.
+
+**Snippet 5:**
+- Output: `"try"`, `"finally"`, `3`.
+- **Reasoning:** The `try` block executes, prints "try", and prepares to return `1`. Before the function can exit, the `finally` block *must* execute. It prints "finally" and hits `return 3`. This `return 3` overrides the pending `return 1` and the function exits.
+
+### Debugging Challenges Explanations
+**Challenge 1:**
+- **Bug:** `queue.length` only tracks integer indices.
+- **Why:** `queue["fast"] = "Task 4"` adds a string property to the underlying array object, but it is not a valid numeric index. The `length` property specifically tracks the highest numeric index + 1. The highest index is `2` (from `"2"`), so length is `3`. The `"fast"` property is there, but doesn't affect length.
+
+**Challenge 2:**
+- **Bug:** Modifying the array's length while iterating forward causes indices to shift.
+- **Why:** When `i=2`, `numbers[2]` is `3`. It gets spliced. The array becomes `[1, 2, 4, 5]`. The element `4` shifts from index 3 to index 2. The loop increments `i` to `3`. The loop then checks `numbers[3]`, which is now `5`. The element `4` was skipped entirely.
+- **Fix:** Either iterate backwards (`for (let i = arr.length - 1; i >= 0; i--)`), or decrement `i` after splicing (`numbers.splice(i, 1); i--;`).
+
+### Explain the Internal Behavior Explanations
+1. **Object Freezing Internals:** When `Object.freeze()` is called, the JS engine iterates over every property and modifies their Property Descriptors. It sets `configurable: false` (preventing deletion/descriptor changes) and `writable: false` (preventing value reassignment). Finally, it flags the object's internal `[[Extensible]]` slot to `false` (preventing addition of new properties).
+2. **`for...of` Protocol Trace:**
+   - The engine checks if the object has a method at `obj[Symbol.iterator]`.
+   - It calls this method, which returns an Iterator object.
+   - The engine enters a hidden `while` loop.
+   - It calls `iterator.next()`.
+   - The method returns an object like `{ value: 10, done: false }`.
+   - The engine extracts `value` and assigns it to the loop variable.
+   - The loop body executes.
+   - It repeats until `next()` returns `{ done: true }`, at which point the loop terminates.
+
+### Trick Questions and Edge Cases Explanations
+**Edge Case 1:**
+- Output: `"Second"`
+- **Reasoning:** You cannot use an object as a property key directly. JS implicitly calls `.toString()` on the key. `obj1.toString()` evaluates to the string `"[object Object]"`. `obj2.toString()` also evaluates to `"[object Object]"`. The second assignment simply overwrites the first. `mainObj["[object Object]"]` becomes `"Second"`.
+
+**Edge Case 2:**
+- Output: `3`, `undefined`.
+- **Reasoning:** The `delete` operator removes the property from the object, but it does NOT shift array elements or change the `length`. It simply leaves an "empty slot" at index 1. Accessing that empty slot returns `undefined`.
